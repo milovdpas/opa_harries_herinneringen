@@ -120,28 +120,26 @@ watch(isLoading, async (loading) => {
         // Listen to Panzoom events to track panning state
         // Add leniency: only set hasActuallyPanned if movement is significant (not just a tiny accidental move)
         let hasActuallyPanned = false
-        let lastPanzoomPosition = { x: 0, y: 0, scale: 1 }
+        let lastPanzoomPosition = { x: 0, y: 0 }
         const PAN_THRESHOLD = 8 // pixels, adjust as needed
-        const SCALE_THRESHOLD = 0.04 // scale difference, adjust as needed
 
         gridRef.value.addEventListener('panzoomstart', (e: any) => {
           hasActuallyPanned = false
-          // Try to get initial position/scale from panzoom
+          // Get initial position from panzoom
           if (panzoomInstance) {
-            const { x, y, scale } = panzoomInstance.getTransform()
-            lastPanzoomPosition = { x, y, scale }
+            const pan = panzoomInstance.getPan()
+            lastPanzoomPosition = { x: pan.x, y: pan.y }
           }
         })
 
         gridRef.value.addEventListener('panzoomchange', (e: any) => {
           // Get current position/scale
           if (panzoomInstance) {
-            const { x, y, scale } = panzoomInstance.getTransform()
-            const dx = Math.abs(x - lastPanzoomPosition.x)
-            const dy = Math.abs(y - lastPanzoomPosition.y)
-            const dScale = Math.abs(scale - lastPanzoomPosition.scale)
-            // Only consider as "actual pan" if moved enough or zoomed enough
-            if (!hasActuallyPanned && (dx > PAN_THRESHOLD || dy > PAN_THRESHOLD || dScale > SCALE_THRESHOLD)) {
+            const pan = panzoomInstance.getPan()
+            const dx = Math.abs(pan.x - lastPanzoomPosition.x)
+            const dy = Math.abs(pan.y - lastPanzoomPosition.y)
+            // Only consider as "actual pan" if moved enough (ignore zoom-only changes)
+            if (!hasActuallyPanned && (dx > PAN_THRESHOLD || dy > PAN_THRESHOLD)) {
               hasActuallyPanned = true
               uiStore.setIsPanning(true)
             }
@@ -149,12 +147,16 @@ watch(isLoading, async (loading) => {
         })
 
         gridRef.value.addEventListener('panzoomend', () => {
+          // Always reset isPanning, even if no actual pan happened (safety net)
           if (hasActuallyPanned) {
             // Small delay to prevent click right after pan ends
             setTimeout(() => {
               uiStore.setIsPanning(false)
               hasActuallyPanned = false
             }, 100)
+          } else {
+            // Immediate reset if no panning occurred
+            uiStore.setIsPanning(false)
           }
         })
         

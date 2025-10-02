@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue'
 
 const audioRef = ref<HTMLAudioElement | null>(null)
-const isMuted = ref(false)
+const isMuted = ref(true)
 const isPlaying = ref(false)
 const defaultVolume = 0.1 // 10% volume (soft background music)
 
@@ -34,8 +34,10 @@ onMounted(() => {
     document.removeEventListener('touchstart', startOnInteraction)
   }
   
-  document.addEventListener('click', startOnInteraction, { once: true })
-  document.addEventListener('touchstart', startOnInteraction, { once: true })
+  if(!isMuted){
+    document.addEventListener('click', startOnInteraction, { once: true })
+    document.addEventListener('touchstart', startOnInteraction, { once: true })
+  }
 })
 </script>
 
