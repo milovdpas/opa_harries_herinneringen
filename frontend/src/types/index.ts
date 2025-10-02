@@ -44,7 +44,8 @@ export interface Memory {
     id: string
     type?: MemoryType // Optional - can be just a photo
     gridPosition: GridPosition
-    photoUrl: string // Required - the photo displayed in the mosaic card
+    photoUrl: string // Required - the original high-quality photo for gallery display
+    gridPhotoUrl?: string // Optional - smaller blended version for mosaic grid (if different)
     typeInput?: string // Optional - quote text, audio URL, or video URL
     submitterName?: string // Optional - who submitted this memory
     timestamp: Date

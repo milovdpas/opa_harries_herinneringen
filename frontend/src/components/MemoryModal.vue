@@ -41,21 +41,26 @@ const canNavigateNext = computed(() => {
 const getPreviousMemoryPosition = () => {
   if (!uiStore.openMemoryPosition) return null
   
-  const { row, col } = uiStore.openMemoryPosition
-  const gridWidth = mosaicStore.gridWidth
-  const gridHeight = mosaicStore.gridHeight
+  const currentPos = uiStore.openMemoryPosition
+  const allMemories = memoriesStore.memories
   
-  // Search backwards from current position
-  let currentIndex = row * gridWidth + col
-  
-  for (let i = currentIndex - 1; i >= 0; i--) {
-    const r = Math.floor(i / gridWidth)
-    const c = i % gridWidth
-    const pos = { row: r, col: c }
-    
-    if (memoriesStore.hasMemoryAt(pos)) {
-      return pos
+  // Sort memories by grid position (row-major order)
+  const sortedMemories = [...allMemories].sort((a, b) => {
+    if (a.gridPosition.row !== b.gridPosition.row) {
+      return a.gridPosition.row - b.gridPosition.row
     }
+    return a.gridPosition.col - b.gridPosition.col
+  })
+  
+  // Find current memory index
+  const currentIndex = sortedMemories.findIndex(
+    m => m.gridPosition.row === currentPos.row && m.gridPosition.col === currentPos.col
+  )
+  
+  // Return previous memory position (if exists)
+  if (currentIndex > 0) {
+    const prevMemory = sortedMemories[currentIndex - 1]
+    return prevMemory ? prevMemory.gridPosition : null
   }
   
   return null
@@ -64,22 +69,26 @@ const getPreviousMemoryPosition = () => {
 const getNextMemoryPosition = () => {
   if (!uiStore.openMemoryPosition) return null
   
-  const { row, col } = uiStore.openMemoryPosition
-  const gridWidth = mosaicStore.gridWidth
-  const gridHeight = mosaicStore.gridHeight
-  const totalCards = gridWidth * gridHeight
+  const currentPos = uiStore.openMemoryPosition
+  const allMemories = memoriesStore.memories
   
-  // Search forwards from current position
-  let currentIndex = row * gridWidth + col
-  
-  for (let i = currentIndex + 1; i < totalCards; i++) {
-    const r = Math.floor(i / gridWidth)
-    const c = i % gridWidth
-    const pos = { row: r, col: c }
-    
-    if (memoriesStore.hasMemoryAt(pos)) {
-      return pos
+  // Sort memories by grid position (row-major order)
+  const sortedMemories = [...allMemories].sort((a, b) => {
+    if (a.gridPosition.row !== b.gridPosition.row) {
+      return a.gridPosition.row - b.gridPosition.row
     }
+    return a.gridPosition.col - b.gridPosition.col
+  })
+  
+  // Find current memory index
+  const currentIndex = sortedMemories.findIndex(
+    m => m.gridPosition.row === currentPos.row && m.gridPosition.col === currentPos.col
+  )
+  
+  // Return next memory position (if exists)
+  if (currentIndex >= 0 && currentIndex < sortedMemories.length - 1) {
+    const nextMemory = sortedMemories[currentIndex + 1]
+    return nextMemory ? nextMemory.gridPosition : null
   }
   
   return null

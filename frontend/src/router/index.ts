@@ -19,6 +19,11 @@ const router = createRouter({
       name: 'generator',
       component: () => import('../views/GeneratorView.vue'),
     },
+    {
+      path: '/alternative',
+      name: 'alternative',
+      component: () => import('../views/AlternativeView.vue'),
+    },
   ],
 })
 

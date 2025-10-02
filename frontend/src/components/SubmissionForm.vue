@@ -6,6 +6,8 @@ import { useMosaicStore } from '@/stores/mosaic'
 import type { MemoryType } from '@/types'
 import { uploadPhoto, uploadAudio, uploadVideo } from '@/services/storage'
 import imageCompression from 'browser-image-compression'
+import { Cropper } from 'vue-advanced-cropper'
+import 'vue-advanced-cropper/dist/style.css'
 
 const uiStore = useUIStore()
 const memoriesStore = useMemoriesStore()
@@ -13,7 +15,8 @@ const mosaicStore = useMosaicStore()
 
 // Form state
 const memoryType = ref<MemoryType | null>(null)
-const photoFile = ref<File | null>(null)
+const originalPhotoFile = ref<File | null>(null) // Original uncropped for gallery
+const gridPhotoFile = ref<File | null>(null) // Cropped square for mosaic
 const photoPreview = ref<string>('')
 const typeInputText = ref('') // For quotes
 const typeInputFile = ref<File | null>(null) // For audio/video
@@ -22,8 +25,13 @@ const isSubmitting = ref(false)
 const isCompressing = ref(false)
 const error = ref<string | null>(null)
 
+// Cropper state
+const showCropper = ref(false)
+const cropperImage = ref<string>('')
+const cropperRef = ref<InstanceType<typeof Cropper> | null>(null)
+
 // Validation
-const isPhotoValid = computed(() => photoFile.value !== null)
+const isPhotoValid = computed(() => originalPhotoFile.value !== null && gridPhotoFile.value !== null)
 const isTypeInputValid = computed(() => {
   // If no type selected, no additional content needed
   if (!memoryType.value) {
@@ -39,7 +47,7 @@ const isTypeInputValid = computed(() => {
 })
 const isFormValid = computed(() => isPhotoValid.value && isTypeInputValid.value)
 
-// Handle photo upload
+// Handle photo upload - save original and show cropper
 const handlePhotoUpload = async (event: Event) => {
   const target = event.target as HTMLInputElement
   const file = target.files?.[0]
@@ -57,41 +65,133 @@ const handlePhotoUpload = async (event: Event) => {
       return
     }
     
+    error.value = null
+    
     try {
       isCompressing.value = true
-      error.value = null
       
+      // Compress original for gallery (reasonable quality, no cropping)
       const originalSizeMB = (file.size / 1024 / 1024).toFixed(2)
       console.log(`🖼️ Original image: ${originalSizeMB} MB`)
       
-      // Compress image using browser-image-compression
-      const options = {
-        maxSizeMB: 2, // Max file size in MB
-        maxWidthOrHeight: 1920, // Max width or height
-        useWebWorker: true, // Use web worker for better performance
-        fileType: 'image/jpeg', // Convert to JPEG for better compression
+      const compressionOptions = {
+        maxSizeMB: 3, // Generous limit for gallery
+        maxWidthOrHeight: 2048, // High resolution for gallery
+        useWebWorker: true,
+        fileType: 'image/jpeg',
+        initialQuality: 0.92, // High quality for gallery
       }
       
-      const compressedFile = await imageCompression(file, options)
+      const compressedOriginal = await imageCompression(file, compressionOptions)
       
-      const compressedSizeMB = (compressedFile.size / 1024 / 1024).toFixed(2)
-      console.log(`✅ Compressed image: ${compressedSizeMB} MB`)
+      const compressedSizeMB = (compressedOriginal.size / 1024 / 1024).toFixed(2)
+      console.log(`✅ Compressed original for gallery: ${compressedSizeMB} MB`)
       
-      photoFile.value = compressedFile
+      // Store original (uncropped) for gallery
+      originalPhotoFile.value = compressedOriginal
       
-      // Create preview
+      // Load image into cropper for grid version
       const reader = new FileReader()
       reader.onload = (e) => {
-        photoPreview.value = e.target?.result as string
+        cropperImage.value = e.target?.result as string
+        showCropper.value = true
       }
-      reader.readAsDataURL(compressedFile)
+      reader.readAsDataURL(file)
       
     } catch (err) {
-      console.error('❌ Error compressing image:', err)
-      error.value = 'Fout bij het comprimeren van de afbeelding. Probeer een andere foto.'
+      console.error('❌ Error processing image:', err)
+      error.value = 'Fout bij het verwerken van de afbeelding. Probeer opnieuw.'
     } finally {
       isCompressing.value = false
     }
+  }
+}
+
+// Handle crop confirmation - save cropped version for grid
+const handleCropConfirm = async () => {
+  if (!cropperRef.value) return
+  
+  try {
+    isCompressing.value = true
+    error.value = null
+    
+    // Get cropped canvas at FULL resolution
+    const { canvas } = cropperRef.value.getResult()
+    
+    if (!canvas) {
+      error.value = 'Kon afbeelding niet bijsnijden'
+      return
+    }
+    
+    console.log(`🖼️ Cropped canvas size: ${canvas.width}x${canvas.height}px`)
+    
+    // Convert canvas to blob at HIGH quality (98%)
+    const blob = await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (blob) {
+          resolve(blob)
+        } else {
+          reject(new Error('Failed to create blob'))
+        }
+      }, 'image/jpeg', 0.98) // Higher quality!
+    })
+    
+    // Convert blob to file
+    const croppedFile = new File([blob], 'grid-image.jpg', { type: 'image/jpeg' })
+    
+    const originalSizeMB = (croppedFile.size / 1024 / 1024).toFixed(2)
+    console.log(`📦 Cropped grid file size: ${originalSizeMB} MB`)
+    
+    // Smart compression: Only compress if needed, with quality preservation
+    let finalFile = croppedFile
+    
+    if (croppedFile.size > 2 * 1024 * 1024) {
+      // Only compress if larger than 2MB (smaller for grid)
+      console.log('📉 Grid file is large, applying compression...')
+      
+      const options = {
+        maxSizeMB: 2, // Smaller limit for grid
+        maxWidthOrHeight: 1024, // Smaller resolution for grid (mosaic display)
+        useWebWorker: true,
+        fileType: 'image/jpeg',
+        initialQuality: 0.88, // Good quality for grid
+      }
+      
+      finalFile = await imageCompression(croppedFile, options)
+      
+      const compressedSizeMB = (finalFile.size / 1024 / 1024).toFixed(2)
+      console.log(`✅ Compressed grid image to: ${compressedSizeMB} MB`)
+    } else {
+      console.log('✅ Grid file size is good')
+    }
+    
+    // Store cropped version for grid
+    gridPhotoFile.value = finalFile
+    
+    // Create preview from cropped version
+    photoPreview.value = canvas.toDataURL('image/jpeg', 0.95)
+    
+    // Close cropper
+    showCropper.value = false
+    cropperImage.value = ''
+    
+  } catch (err) {
+    console.error('❌ Error processing image:', err)
+    error.value = 'Fout bij het verwerken van de afbeelding. Probeer opnieuw.'
+  } finally {
+    isCompressing.value = false
+  }
+}
+
+// Handle crop cancel
+const handleCropCancel = () => {
+  showCropper.value = false
+  cropperImage.value = ''
+  originalPhotoFile.value = null // Also clear original
+  // Reset file input
+  const fileInput = document.querySelector<HTMLInputElement>('input[type="file"][accept^="image/"]')
+  if (fileInput) {
+    fileInput.value = ''
   }
 }
 
@@ -128,7 +228,8 @@ const handleTypeInputFileUpload = (event: Event) => {
 // Reset form
 const resetForm = () => {
   memoryType.value = null
-  photoFile.value = null
+  originalPhotoFile.value = null
+  gridPhotoFile.value = null
   photoPreview.value = ''
   typeInputText.value = ''
   typeInputFile.value = null
@@ -182,9 +283,12 @@ const submitForm = async () => {
     // Generate unique memory ID
     const memoryId = `mem_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
     
-    // Step 1: Upload photo to Firebase Storage (required)
-    console.log('📤 Uploading photo to Firebase Storage...')
-    const photoUrl = await uploadPhoto(memoryId, photoFile.value!)
+    // Step 1: Upload both photo versions to Firebase Storage
+    console.log('📤 Uploading gallery photo (original) to Firebase Storage...')
+    const photoUrl = await uploadPhoto(memoryId, originalPhotoFile.value!)
+    
+    console.log('📤 Uploading grid photo (cropped) to Firebase Storage...')
+    const gridPhotoUrl = await uploadPhoto(`${memoryId}_grid`, gridPhotoFile.value!)
     
     // Step 2: Upload audio/video or use quote text (optional)
     let typeInput: string | undefined
@@ -201,7 +305,8 @@ const submitForm = async () => {
     // Step 3: Save memory to Firestore
     // Build memory object, only include fields that have values
     const memoryData: any = {
-      photoUrl,
+      photoUrl, // Original uncropped for gallery
+      gridPhotoUrl, // Cropped square for mosaic
       gridPosition: targetPosition,
     }
     
@@ -240,6 +345,48 @@ const submitForm = async () => {
 </script>
 
 <template>
+  <!-- Image Cropper Modal -->
+  <Transition name="modal">
+    <div v-if="showCropper" class="cropper-modal-overlay" @click="handleCropCancel">
+      <div class="cropper-modal-container" @click.stop>
+        <div class="cropper-header">
+          <h2>Bijsnijden naar Vierkant</h2>
+          <button class="close-btn" @click="handleCropCancel" aria-label="Sluiten">×</button>
+        </div>
+        
+        <div class="cropper-content">
+          <p class="cropper-help">Sleep en zoom om een vierkant gebied te selecteren</p>
+          
+          <Cropper
+            ref="cropperRef"
+            class="cropper"
+            :src="cropperImage"
+            :stencil-props="{
+              aspectRatio: 1
+            }"
+            :canvas="{
+              maxWidth: 2048,
+              maxHeight: 2048,
+              imageSmoothingEnabled: true,
+              imageSmoothingQuality: 'high'
+            }"
+          />
+          
+          <div class="cropper-actions">
+            <button type="button" @click="handleCropCancel" class="btn-secondary">
+              Annuleren
+            </button>
+            <button type="button" @click="handleCropConfirm" class="btn-primary" :disabled="isCompressing">
+              <span v-if="isCompressing">Verwerken...</span>
+              <span v-else>✓ Bevestigen</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </Transition>
+
+  <!-- Main Submission Form Modal -->
   <Transition name="modal">
     <div v-if="uiStore.isSubmissionFormOpen" class="modal-overlay" @click="closeForm">
       <div class="modal-container" @click.stop>
@@ -269,7 +416,7 @@ const submitForm = async () => {
               <!-- Photo preview -->
               <div v-else-if="photoPreview" class="photo-preview">
                 <img :src="photoPreview" alt="Preview" />
-                <button type="button" @click="photoFile = null; photoPreview = ''" class="remove-btn">
+                <button type="button" @click="originalPhotoFile = null; gridPhotoFile = null; photoPreview = ''" class="remove-btn">
                   Verwijderen
                 </button>
               </div>
@@ -736,6 +883,105 @@ textarea.text-input {
   color: var(--color-text-primary);
 }
 
+/* Image Cropper Modal */
+.cropper-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 2rem;
+}
+
+.cropper-modal-container {
+  background: var(--color-background);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  max-width: 700px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.cropper-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.cropper-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.cropper-content {
+  padding: 1.5rem;
+}
+
+.cropper-help {
+  color: var(--color-text-secondary);
+  margin-bottom: 1rem;
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+.cropper {
+  width: 100%;
+  height: 450px;
+  background: var(--color-background-secondary);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.cropper-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.cropper-actions .btn-secondary,
+.cropper-actions .btn-primary {
+  flex: 1;
+  padding: 0.875rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.cropper-actions .btn-secondary {
+  background: var(--color-background-secondary);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+}
+
+.cropper-actions .btn-secondary:hover {
+  background: var(--color-border);
+}
+
+.cropper-actions .btn-primary {
+  background: var(--color-text-primary);
+  color: var(--color-background);
+}
+
+.cropper-actions .btn-primary:hover:not(:disabled) {
+  opacity: 0.8;
+}
+
+.cropper-actions .btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .type-selector {
@@ -743,6 +989,18 @@ textarea.text-input {
   }
   
   .form-actions {
+    flex-direction: column-reverse;
+  }
+  
+  .cropper-modal-overlay {
+    padding: 1rem;
+  }
+  
+  .cropper {
+    height: 350px;
+  }
+  
+  .cropper-actions {
     flex-direction: column-reverse;
   }
 }
