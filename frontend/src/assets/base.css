@@ -1,0 +1,107 @@
+/* Opa Harry's Herinneringen - Base Styles */
+
+/* Color Palette - Memorial Black & White Theme */
+:root {
+  /* Base colors */
+  --color-white: #ffffff;
+  --color-black: #000000;
+  --color-black-matte: #1a1a1a;
+  --color-gray-light: #f5f5f5;
+  --color-gray-medium: #cccccc;
+  --color-gray-dark: #333333;
+
+  /* Background - Black matte with subtle gradient */
+  --color-background: #0a0a0a;
+  --color-background-gradient: radial-gradient(ellipse at center,
+      rgba(40, 40, 40, 0.4) 0%,
+      rgba(0, 0, 0, 1) 100%);
+
+  /* Semantic colors - adjusted for dark background */
+  --color-background-secondary: var(--color-black-matte);
+  --color-text-primary: var(--color-white);
+  --color-text-secondary: var(--color-gray-light);
+  --color-border: var(--color-gray-dark);
+  --color-overlay: rgba(0, 0, 0, 0.9);
+
+  /* Spacing */
+  --spacing-xs: 0.5rem;
+  --spacing-sm: 1rem;
+  --spacing-md: 2rem;
+  --spacing-lg: 3rem;
+  --spacing-xl: 4rem;
+
+  /* Typography - will be updated with memorial fonts */
+  --font-family-base: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
+    Cantarell, 'Helvetica Neue', sans-serif;
+  --font-size-base: 16px;
+  --line-height-base: 1.6;
+
+  /* Transitions */
+  --transition-fast: 0.2s ease;
+  --transition-medium: 0.3s ease;
+  --transition-slow: 0.5s ease;
+
+  /* Z-index layers */
+  --z-base: 1;
+  --z-modal: 100;
+  --z-overlay: 200;
+}
+
+/* CSS Reset */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Base element styles */
+body {
+  min-height: 100vh;
+  color: var(--color-text-primary);
+  background: var(--color-background);
+  /* Apply subtle gradient overlay for depth */
+  background-image: var(--color-background-gradient);
+  background-attachment: fixed;
+  line-height: var(--line-height-base);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-base);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* Accessibility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
