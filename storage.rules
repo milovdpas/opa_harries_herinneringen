@@ -1,0 +1,40 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Memories folder - public read, create-only uploads
+    match /memories/{memoryId}/{fileName} {
+      
+      // Anyone can read files (public memorial wall)
+      allow read: if true;
+      
+      // Anyone can create/upload files with restrictions
+      allow create: if request.resource.size < 50 * 1024 * 1024  // Max 50MB
+                    && (
+                      // Allow images
+                      request.resource.contentType.matches('image/.*')
+                      // Allow audio files
+                      || request.resource.contentType.matches('audio/.*')
+                      // Allow video files
+                      || request.resource.contentType.matches('video/.*')
+                    )
+                    && (
+                      // Validate filenames
+                      fileName.matches('photo\\.(jpg|jpeg|png|webp|gif)')
+                      || fileName.matches('audio\\.(mp3|wav|ogg|m4a|aac)')
+                      || fileName.matches('video\\.(mp4|webm|mov|avi)')
+                    );
+      
+      // Prevent updates and deletes - files are permanent
+      allow update: if false;
+      allow delete: if false;
+    }
+    
+    // Deny access to all other paths by default
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
+

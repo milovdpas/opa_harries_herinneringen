@@ -1,10 +1,10 @@
-// Type definitions for Opa Harry's Herinneringen
+// Type definitions for Opa Harrie's Herinneringen
 
 /**
  * Additional content types for memories
  * Every memory has a photo, plus optional additional content
  */
-export type MemoryType = 'quote' | 'audio' | 'video'
+export type MemoryType = 'quote' | 'speech' | 'audio' | 'video'
 
 /**
  * Position of a card in the grid
@@ -44,7 +44,7 @@ export interface Memory {
     id: string
     type?: MemoryType // Optional - can be just a photo
     gridPosition: GridPosition
-    photoUrl: string // Required - the original high-quality photo for gallery display
+    photoUrl?: string // Optional - if not provided, a heart icon is shown
     gridPhotoUrl?: string // Optional - smaller blended version for mosaic grid (if different)
     typeInput?: string // Optional - quote text, audio URL, or video URL
     submitterName?: string // Optional - who submitted this memory

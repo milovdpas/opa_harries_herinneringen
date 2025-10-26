@@ -1,5 +1,5 @@
 import { initializeApp, type FirebaseApp } from 'firebase/app'
-import { getFirestore, type Firestore } from 'firebase/firestore'
+import { type Firestore, persistentLocalCache, initializeFirestore } from 'firebase/firestore'
 import { getStorage, type FirebaseStorage } from 'firebase/storage'
 
 // Firebase configuration from environment variables
@@ -40,9 +40,19 @@ let storage: FirebaseStorage
 
 try {
     app = initializeApp(firebaseConfig)
-    db = getFirestore(app)
+
+    // Initialize Firestore with persistent cache for better mobile experience
+    // This allows the app to work offline and sync when connection is restored
+    db = initializeFirestore(app, {
+        localCache: persistentLocalCache({
+            // Optional: Configure cache size (default is 40MB)
+            // cacheSizeBytes: 100 * 1024 * 1024, // 100MB
+        })
+    })
+
     storage = getStorage(app)
-    console.log('Firebase initialized successfully')
+
+    console.log('Firebase initialized successfully with persistent cache')
 } catch (error) {
     console.error('Error initializing Firebase:', error)
     throw error

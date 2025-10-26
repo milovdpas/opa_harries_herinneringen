@@ -60,11 +60,26 @@ export const useMemoriesStore = defineStore('memories', () => {
     }
 
     /**
-     * Get next available empty position (sequential filling)
+     * Get next available empty position (random placement in middle area)
      * Skips transparent positions (where alpha < 0.1)
+     * Prioritizes positions in the middle 70% of the grid
      */
     const getNextEmptyPosition = (gridWidth: number, gridHeight: number): GridPosition | null => {
         const mosaicStore = useMosaicStore()
+
+        // Collect all valid empty positions
+        const emptyPositions: GridPosition[] = []
+        const middlePositions: GridPosition[] = []
+
+        // Define middle area boundaries (inner 70% of grid)
+        const marginPercentage = 0.15 // 15% margin on each side = 70% middle area
+        const minRow = Math.floor(gridHeight * marginPercentage)
+        const maxRow = Math.ceil(gridHeight * (1 - marginPercentage))
+        const minCol = Math.floor(gridWidth * marginPercentage)
+        const maxCol = Math.ceil(gridWidth * (1 - marginPercentage))
+
+        console.log(`🎯 Grid size: ${gridWidth}x${gridHeight}`)
+        console.log(`📍 Middle area: rows ${minRow}-${maxRow}, cols ${minCol}-${maxCol}`)
 
         for (let row = 0; row < gridHeight; row++) {
             for (let col = 0; col < gridWidth; col++) {
@@ -81,11 +96,34 @@ export const useMemoriesStore = defineStore('memories', () => {
                     continue
                 }
 
-                // Found valid position!
-                return position
+                // Valid empty position!
+                emptyPositions.push(position)
+
+                // Check if it's in the middle area
+                if (row >= minRow && row < maxRow && col >= minCol && col < maxCol) {
+                    middlePositions.push(position)
+                }
             }
         }
-        return null // Mosaic is full!
+
+        console.log(`✅ Found ${emptyPositions.length} total empty positions`)
+        console.log(`🎯 Found ${middlePositions.length} middle area positions`)
+
+        // No empty positions at all
+        if (emptyPositions.length === 0) {
+            return null
+        }
+
+        // Prefer middle positions if available
+        const positionsToChooseFrom = middlePositions.length > 0 ? middlePositions : emptyPositions
+
+        // Pick a random position
+        const randomIndex = Math.floor(Math.random() * positionsToChooseFrom.length)
+        const selectedPosition = positionsToChooseFrom[randomIndex] ?? null
+
+        console.log(`🎲 Selected random position:`, selectedPosition)
+
+        return selectedPosition
     }
 
     /**

@@ -1,6 +1,6 @@
-# Opa Harry's Herinneringen - Frontend
+# Opa Harrie's Herinneringen - Frontend
 
-A heartfelt, interactive web application to celebrate the life and memories of Opa Harry through a beautiful photo mosaic.
+A heartfelt, interactive web application to celebrate the life and memories of Opa Harrie through a beautiful photo mosaic.
 
 ## Recommended IDE Setup
 
@@ -35,8 +35,6 @@ npm install
 
 This project requires a Firebase project with Firestore and Storage enabled.
 
-**📖 See [FIREBASE_SETUP_GUIDE.md](./FIREBASE_SETUP_GUIDE.md) for detailed step-by-step instructions with screenshots!**
-
 **Quick Setup:**
 
 1. Copy `.env.example` to `.env`:
@@ -52,6 +50,31 @@ This project requires a Firebase project with Firestore and Storage enabled.
 3. Fill in your `.env` file with your Firebase credentials
 
 4. Enable Firestore Database (test mode) and Firebase Storage in Firebase Console
+
+### 3. Configure CORS for Firebase Storage
+
+To allow the frontend to load images from Firebase Storage, you need to set CORS configuration:
+
+**Prerequisites:**
+- Install [Google Cloud SDK](https://cloud.google.com/sdk/docs/install)
+- Authenticate: `gcloud auth login`
+- Set project: `gcloud config set project YOUR_PROJECT_ID`
+
+**Apply CORS Configuration:**
+
+```sh
+gsutil cors set frontend/cors.json gs://harrys-herrineringen.firebasestorage.app
+```
+
+**Verify CORS was applied:**
+
+```sh
+gsutil cors get gs://harrys-herrineringen.firebasestorage.app
+```
+
+The `cors.json` file allows requests from:
+- Local development servers (localhost:5173, 5174, 3000)
+- Production domains (opa-harry.milovanderpas.nl, opa-harrie.milovanderpas.nl)
 
 ### Compile and Hot-Reload for Development
 

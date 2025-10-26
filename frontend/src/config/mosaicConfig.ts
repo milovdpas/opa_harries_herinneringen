@@ -13,7 +13,7 @@ import type { CardColorData } from '@/types'
  */
 
 export const MOSAIC_CONFIG = {
-    referencePhotoUrl: '/harry.jpg',
+    referencePhotoUrl: '/harrie.jpg',
     gridWidth: 89,
     gridHeight: 67,
     cardColors: [

@@ -1,7 +1,7 @@
 {
   "name": "opa-harries-herinneringen",
   "version": "0.1.0",
-  "description": "Interactive photo mosaic memorial for Opa Harry",
+  "description": "Interactive photo mosaic memorial for Opa Harrie",
   "private": true,
   "type": "module",
   "engines": {
@@ -20,6 +20,7 @@
     "@panzoom/panzoom": "^4.6.0",
     "browser-image-compression": "^2.0.2",
     "firebase": "^12.3.0",
+    "gsap": "^3.13.0",
     "openseadragon": "^5.0.1",
     "pinia": "^3.0.3",
     "vue": "^3.5.22",

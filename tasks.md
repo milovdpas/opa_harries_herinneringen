@@ -1,4 +1,4 @@
-# Opa Harry's Herinneringen - Development Tasks
+# Opa Harrie's Herinneringen - Development Tasks
 
 ## 🏁 Phase 0: Project Setup & Cleanup ✅
 

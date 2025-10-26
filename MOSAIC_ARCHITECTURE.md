@@ -7,7 +7,7 @@ The cards themselves recreate the reference photo through strategic placement an
 - Reference photo is analyzed to extract color/brightness data for each grid position
 - Empty cards display with background colors matching that area of the reference photo
 - As memories are uploaded, photos replace the colored placeholders
-- The overall effect: Opa Harry's face is visible from afar, individual memories up close
+- The overall effect: Opa Harrie's face is visible from afar, individual memories up close
 
 ### Visual Flow
 ```
@@ -102,7 +102,7 @@ We can implement the basic algorithm ourselves using Canvas API!
 **In Code (Static Config):**
 ```typescript
 // Reference photo path
-const REFERENCE_PHOTO = '/opa-harry.jpg'
+const REFERENCE_PHOTO = '/opa-harrie.jpg'
 
 // Grid dimensions calculated from photo
 // Card colors calculated from photo analysis
@@ -190,7 +190,7 @@ function analyzeReferencePhoto(imageUrl, gridWidth, gridHeight) {
 
 ### Color Accuracy:
 - Empty cards collectively recreate reference photo
-- From distance: Clear image of Opa Harry
+- From distance: Clear image of Opa Harrie
 - Up close: Individual colored squares
 - As memories fill in: Colored squares → Real photos
 
@@ -250,7 +250,7 @@ By end of Phase 1, we should have:
 - ✅ Empty cards show "Add Memory" on hover
 - ✅ Basic zoom functionality
 - ✅ Data models and Pinia stores ready
-- ✅ Visual confirmation that mosaic recreates Opa Harry's face
+- ✅ Visual confirmation that mosaic recreates Opa Harrie's face
 
 ---
 
@@ -266,5 +266,5 @@ By end of Phase 1, we should have:
 
 ---
 
-*This architecture ensures a beautiful, meaningful mosaic that honors Opa Harry while being technically feasible.*
+*This architecture ensures a beautiful, meaningful mosaic that honors Opa Harrie while being technically feasible.*
 

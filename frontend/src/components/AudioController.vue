@@ -2,20 +2,9 @@
 import { ref, onMounted } from 'vue'
 
 const audioRef = ref<HTMLAudioElement | null>(null)
-const isMuted = ref(true)
+const isMuted = ref(false)
 const isPlaying = ref(false)
 const defaultVolume = 0.1 // 10% volume (soft background music)
-
-// Auto-start audio on first user interaction
-const startAudio = () => {
-  if (audioRef.value && !isPlaying.value) {
-    audioRef.value.volume = defaultVolume // Set lower volume
-    audioRef.value.play().catch(err => {
-      console.log('Audio autoplay prevented, waiting for user interaction:', err)
-    })
-    isPlaying.value = true
-  }
-}
 
 // Toggle mute
 const toggleMute = () => {
@@ -27,17 +16,42 @@ const toggleMute = () => {
 
 // Start audio on first click/touch
 onMounted(() => {
-  const startOnInteraction = () => {
-    startAudio()
-    // Remove listeners after first interaction
-    document.removeEventListener('click', startOnInteraction)
-    document.removeEventListener('touchstart', startOnInteraction)
+  console.log('🎵 AudioController mounted, waiting for user interaction...')
+  
+  const startOnInteraction = (e: Event) => {
+    // Skip if already playing or muted
+    if (isPlaying.value || isMuted.value) return
+    
+    console.log('👆 User interaction detected!', {
+      isMuted: isMuted.value,
+      hasAudioRef: !!audioRef.value,
+      isPlaying: isPlaying.value
+    })
+    
+    // Play audio directly in the event handler (synchronously)
+    if (audioRef.value) {
+      console.log('🎵 Setting volume to', defaultVolume)
+      audioRef.value.volume = defaultVolume
+      
+      console.log('🎵 Attempting to play audio...')
+      audioRef.value.play()
+        .then(() => {
+          console.log('✅ Audio playing successfully!')
+          isPlaying.value = true
+          // Remove listeners after successful play
+          document.removeEventListener('click', startOnInteraction)
+          document.removeEventListener('touchstart', startOnInteraction)
+        })
+        .catch(err => {
+          console.error('❌ Audio play failed:', err)
+          // Keep listeners active to try again on next interaction
+        })
+    }
   }
   
-  if(!isMuted){
-    document.addEventListener('click', startOnInteraction, { once: true })
-    document.addEventListener('touchstart', startOnInteraction, { once: true })
-  }
+  // Keep listeners active until audio successfully plays
+  document.addEventListener('click', startOnInteraction)
+  document.addEventListener('touchstart', startOnInteraction)
 })
 </script>
 

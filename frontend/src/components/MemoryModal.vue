@@ -4,8 +4,10 @@ import { useUIStore } from '@/stores/ui'
 import { useMemoriesStore } from '@/stores/memories'
 import { useMosaicStore } from '@/stores/mosaic'
 import QuoteDisplay from './QuoteDisplay.vue'
+import SpeechDisplay from './SpeechDisplay.vue'
 import AudioPlayer from './AudioPlayer.vue'
 import VideoPlayer from './VideoPlayer.vue'
+import HeartIcon from './HeartIcon.vue'
 
 const uiStore = useUIStore()
 const memoriesStore = useMemoriesStore()
@@ -130,36 +132,72 @@ const handleKeydown = (e: KeyboardEvent) => {
 }
 
 // Touch/swipe handlers
+const wasPinching = ref(false)
+const touchCount = ref(0)
+let pinchCooldown = false
+
 const handleTouchStart = (e: TouchEvent) => {
-  if (e.touches[0]) {
+  touchCount.value = e.touches.length
+  
+  // Only track single-touch swipes (not pinch-to-zoom)
+  if (e.touches.length === 1 && e.touches[0] && !pinchCooldown) {
     touchStartX.value = e.touches[0].clientX
     touchEndX.value = e.touches[0].clientX
+    wasPinching.value = false
+  } else if (e.touches.length > 1) {
+    // Multi-touch detected (pinch-to-zoom)
+    wasPinching.value = true
   }
 }
 
 const handleTouchMove = (e: TouchEvent) => {
-  if (e.touches[0]) {
+  touchCount.value = e.touches.length
+  
+  // Detect if user is pinching
+  if (e.touches.length > 1) {
+    wasPinching.value = true
+  } else if (e.touches.length === 1 && !wasPinching.value && e.touches[0] && !pinchCooldown) {
     touchEndX.value = e.touches[0].clientX
   }
 }
 
-const handleTouchEnd = () => {
-  const distance = touchStartX.value - touchEndX.value
-  const isSwipe = Math.abs(distance) > minSwipeDistance
+const handleTouchEnd = (e: TouchEvent) => {
+  // Update remaining touch count
+  touchCount.value = e.touches.length
   
-  if (isSwipe) {
-    if (distance > 0) {
-      // Swiped left → navigate next
-      navigateNext()
-    } else {
-      // Swiped right → navigate previous
-      navigatePrevious()
+  // If there are still touches remaining, don't process anything yet
+  if (e.touches.length > 0) {
+    return
+  }
+  
+  // Only trigger swipe if it was a pure single-touch gesture (never pinched)
+  if (!wasPinching.value && !pinchCooldown) {
+    const distance = touchStartX.value - touchEndX.value
+    const isSwipe = Math.abs(distance) > minSwipeDistance
+    
+    if (isSwipe) {
+      if (distance > 0) {
+        // Swiped left → navigate next
+        navigateNext()
+      } else {
+        // Swiped right → navigate previous
+        navigatePrevious()
+      }
     }
+  }
+  
+  // If we just finished a pinch, set a cooldown to prevent accidental swipes
+  if (wasPinching.value) {
+    pinchCooldown = true
+    setTimeout(() => {
+      pinchCooldown = false
+    }, 300) // 300ms cooldown after pinch
   }
   
   // Reset
   touchStartX.value = 0
   touchEndX.value = 0
+  wasPinching.value = false
 }
 
 onMounted(() => {
@@ -209,13 +247,21 @@ onUnmounted(() => {
         
         <!-- Card Container (with 3D flip) -->
         <div class="card-container" :class="{ flipped: uiStore.isMemoryFlipped }">
-          <!-- Front: Photo -->
+          <!-- Front: Photo or Heart Icon -->
           <div class="card-side card-front">
+            <!-- Show photo if available -->
             <img
+              v-if="currentMemory.photoUrl"
               :src="currentMemory.photoUrl"
               :alt="`Memory by ${currentMemory.submitterName || 'Unknown'}`"
               class="memory-image"
             />
+            
+            <!-- Show heart icon if no photo -->
+            <div v-else class="heart-placeholder">
+              <HeartIcon :size="120" color="white" />
+              <p class="heart-message">{{ currentMemory.submitterName || 'Herinnering' }}</p>
+            </div>
             
             <!-- Flip Button (only show if there's content on back) -->
             <button
@@ -225,17 +271,25 @@ onUnmounted(() => {
               title="Draai kaart om (spatiebalk)"
             >
               <span v-if="currentMemory.type === 'quote'">💬 Toon Citaat</span>
+              <span v-else-if="currentMemory.type === 'speech'">📜 Lees Toespraak</span>
               <span v-else-if="currentMemory.type === 'audio'">🎵 Beluister Audio</span>
               <span v-else-if="currentMemory.type === 'video'">🎥 Bekijk Video</span>
             </button>
           </div>
           
-          <!-- Back: Quote/Audio/Video -->
+          <!-- Back: Quote/Speech/Audio/Video -->
           <div class="card-side card-back">
             <!-- Quote -->
             <QuoteDisplay
               v-if="currentMemory.type === 'quote' && currentMemory.typeInput"
               :quote="currentMemory.typeInput"
+              :submitter-name="currentMemory.submitterName"
+            />
+            
+            <!-- Speech -->
+            <SpeechDisplay
+              v-else-if="currentMemory.type === 'speech' && currentMemory.typeInput"
+              :speech="currentMemory.typeInput"
               :submitter-name="currentMemory.submitterName"
             />
             
@@ -280,7 +334,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 9999; /* Ensure modal is above everything including header */
   padding: 2rem;
 }
 
@@ -351,10 +405,13 @@ onUnmounted(() => {
   margin-bottom: 0.3rem; /* Fine-tune vertical alignment */
 }
 
-.nav-btn:hover {
-  background: rgba(0, 0, 0, 0.9);
-  border-color: rgba(255, 255, 255, 0.6);
-  transform: translateY(-50%) scale(1.1);
+/* Only apply hover effects on devices that support hover (not touch devices) */
+@media (hover: hover) {
+  .nav-btn:hover {
+    background: rgba(0, 0, 0, 0.9);
+    border-color: rgba(255, 255, 255, 0.6);
+    transform: translateY(-50%) scale(1.1);
+  }
 }
 
 .nav-prev {
@@ -427,6 +484,27 @@ onUnmounted(() => {
   height: 100%;
   object-fit: contain;
   background: #000;
+}
+
+/* Heart Placeholder */
+.heart-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%);
+  gap: 1.5rem;
+}
+
+.heart-message {
+  color: white;
+  font-size: 1.5rem;
+  font-weight: 600;
+  text-align: center;
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 /* Flip button (on front) */

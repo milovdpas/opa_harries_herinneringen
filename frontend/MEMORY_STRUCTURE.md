@@ -2,7 +2,7 @@
 
 ## 📸 Core Concept
 
-Every memory in Opa Harry's memorial has **two parts**:
+Every memory in Opa Harrie's memorial has **two parts**:
 
 1. **Photo** (Required) - Displayed in the mosaic card
 2. **Additional Content** (Optional) - Quote, Audio, or Video (or just a photo with no additional content)
@@ -11,16 +11,16 @@ Every memory in Opa Harry's memorial has **two parts**:
 
 ### Type: `quote`
 - **Photo**: Required - shows in mosaic card
-- **Additional Content**: Quote text about Opa Harry
+- **Additional Content**: Quote text about Opa Harrie
 - **Example**: 
   - Photo: Family gathering photo
-  - Quote: "Opa Harry always said, 'Family is everything'"
+  - Quote: "Opa Harrie always said, 'Family is everything'"
 
 ### Type: `audio`
 - **Photo**: Required - shows in mosaic card  
 - **Additional Content**: Audio recording (story, message, song)
 - **Example**:
-  - Photo: Opa Harry at the piano
+  - Photo: Opa Harrie at the piano
   - Audio: Recording of him playing his favorite song
 
 ### Type: `video`
@@ -28,7 +28,7 @@ Every memory in Opa Harry's memorial has **two parts**:
 - **Additional Content**: Video clip
 - **Example**:
   - Photo: Still frame from the video
-  - Video: Home movie of Opa Harry at a birthday party
+  - Video: Home movie of Opa Harrie at a birthday party
 
 ## 📦 Data Structure
 
@@ -112,7 +112,7 @@ Click card to flip and see additional content
 
 ### From Distance:
 - Mosaic shows all photos
-- Creates image of Opa Harry's face
+- Creates image of Opa Harrie's face
 - Beautiful collective display
 
 ### Up Close:
@@ -154,7 +154,7 @@ memories/
   "id": "mem_123",
   "type": "quote",
   "photoUrl": "https://storage.../memories/mem_123/photo.jpg",
-  "typeInput": "Opa Harry was the kindest man I ever knew",
+  "typeInput": "Opa Harrie was the kindest man I ever knew",
   "submitterName": "Jan",
   "gridPosition": { "row": 5, "col": 12 },
   "timestamp": "2024-01-15T10:30:00Z"
@@ -174,5 +174,5 @@ memories/
 
 ---
 
-*This structure ensures every card in the mosaic has a photo, while allowing rich additional content to honor Opa Harry's memory.*
+*This structure ensures every card in the mosaic has a photo, while allowing rich additional content to honor Opa Harrie's memory.*
 

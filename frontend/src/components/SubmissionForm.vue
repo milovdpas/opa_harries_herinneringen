@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useUIStore } from '@/stores/ui'
 import { useMemoriesStore } from '@/stores/memories'
 import { useMosaicStore } from '@/stores/mosaic'
@@ -24,11 +24,23 @@ const submitterName = ref('')
 const isSubmitting = ref(false)
 const isCompressing = ref(false)
 const error = ref<string | null>(null)
+const isInteractive = ref(true) // Prevent immediate clicks after opening
 
 // Cropper state
 const showCropper = ref(false)
 const cropperImage = ref<string>('')
 const cropperRef = ref<InstanceType<typeof Cropper> | null>(null)
+
+// Watch for form opening to prevent immediate clicks
+watch(() => uiStore.isSubmissionFormOpen, (isOpen) => {
+  if (isOpen) {
+    // Disable interactions briefly when form opens
+    isInteractive.value = false
+    setTimeout(() => {
+      isInteractive.value = true
+    }, 300) // 300ms delay before allowing interactions
+  }
+})
 
 // Validation
 const isPhotoValid = computed(() => originalPhotoFile.value !== null && gridPhotoFile.value !== null)
@@ -39,13 +51,31 @@ const isTypeInputValid = computed(() => {
   }
   
   // If type is selected, validate the input
-  if (memoryType.value === 'quote') {
+  if (memoryType.value === 'quote' || memoryType.value === 'speech') {
     return typeInputText.value.trim().length >= 5
   } else {
     return typeInputFile.value !== null
   }
 })
-const isFormValid = computed(() => isPhotoValid.value && isTypeInputValid.value)
+// Form is valid if either:
+// 1. There's a photo (with optional content)
+// 2. OR there's a quote/speech (without photo)
+const isFormValid = computed(() => {
+  const hasPhoto = isPhotoValid.value
+  const hasText = (memoryType.value === 'quote' || memoryType.value === 'speech') && typeInputText.value.trim().length >= 5
+  
+  // Must have either photo or text content
+  if (!hasPhoto && !hasText) {
+    return false
+  }
+  
+  // If has photo, validate additional content (if any)
+  if (hasPhoto && memoryType.value && !isTypeInputValid.value) {
+    return false
+  }
+  
+  return true
+})
 
 // Handle photo upload - save original and show cropper
 const handlePhotoUpload = async (event: Event) => {
@@ -256,12 +286,17 @@ const submitForm = async () => {
     // Use selected position if available, otherwise get next empty position
     let targetPosition = uiStore.selectedCardPosition
     
+    console.log('🔍 Selected position from UI:', targetPosition)
+    
     if (!targetPosition) {
       // No specific position selected, use next available
+      console.log('🎲 No position selected, getting random middle position...')
       targetPosition = memoriesStore.getNextEmptyPosition(
         mosaicStore.gridWidth,
         mosaicStore.gridHeight,
       )
+    } else {
+      console.log('✅ Using clicked position:', targetPosition)
     }
     
     if (!targetPosition) {
@@ -283,16 +318,23 @@ const submitForm = async () => {
     // Generate unique memory ID
     const memoryId = `mem_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
     
-    // Step 1: Upload both photo versions to Firebase Storage
-    console.log('📤 Uploading gallery photo (original) to Firebase Storage...')
-    const photoUrl = await uploadPhoto(memoryId, originalPhotoFile.value!)
+    // Step 1: Upload both photo versions to Firebase Storage (if photo provided)
+    let photoUrl: string | undefined
+    let gridPhotoUrl: string | undefined
     
-    console.log('📤 Uploading grid photo (cropped) to Firebase Storage...')
-    const gridPhotoUrl = await uploadPhoto(`${memoryId}_grid`, gridPhotoFile.value!)
+    if (originalPhotoFile.value && gridPhotoFile.value) {
+      console.log('📤 Uploading gallery photo (original) to Firebase Storage...')
+      photoUrl = await uploadPhoto(memoryId, originalPhotoFile.value)
+      
+      console.log('📤 Uploading grid photo (cropped) to Firebase Storage...')
+      gridPhotoUrl = await uploadPhoto(`${memoryId}_grid`, gridPhotoFile.value)
+    } else {
+      console.log('📝 No photo provided, will use heart icon')
+    }
     
-    // Step 2: Upload audio/video or use quote text (optional)
+    // Step 2: Upload audio/video or use quote/speech text (optional)
     let typeInput: string | undefined
-    if (memoryType.value === 'quote') {
+    if (memoryType.value === 'quote' || memoryType.value === 'speech') {
       typeInput = typeInputText.value.trim()
     } else if (memoryType.value === 'audio' && typeInputFile.value) {
       console.log('🎵 Uploading audio to Firebase Storage...')
@@ -305,9 +347,15 @@ const submitForm = async () => {
     // Step 3: Save memory to Firestore
     // Build memory object, only include fields that have values
     const memoryData: any = {
-      photoUrl, // Original uncropped for gallery
-      gridPhotoUrl, // Cropped square for mosaic
       gridPosition: targetPosition,
+    }
+    
+    // Only add photo URLs if provided
+    if (photoUrl) {
+      memoryData.photoUrl = photoUrl
+    }
+    if (gridPhotoUrl) {
+      memoryData.gridPhotoUrl = gridPhotoUrl
     }
     
     // Only add optional fields if they have values
@@ -395,7 +443,7 @@ const submitForm = async () => {
           <button class="close-btn" @click="closeForm" aria-label="Sluiten">×</button>
         </div>
 
-        <form @submit.prevent="submitForm" class="submission-form">
+        <form @submit.prevent="submitForm" class="submission-form" :style="{ pointerEvents: isInteractive ? 'auto' : 'none' }">
           <!-- Error message -->
           <div v-if="error" class="error-message">
             ⚠️ {{ error }}
@@ -403,8 +451,8 @@ const submitForm = async () => {
 
           <!-- Step 1: Upload Photo -->
           <div class="form-section">
-            <h3>1. Upload Foto <span class="required">*</span></h3>
-            <p class="help-text">Deze foto wordt getoond in het mozaïek</p>
+            <h3>1. Upload Foto (optioneel)</h3>
+            <p class="help-text">Upload een foto of laat leeg voor alleen een citaat met hart-icoon</p>
             
             <div class="photo-upload">
               <!-- Compressing state -->
@@ -439,14 +487,24 @@ const submitForm = async () => {
 
           <!-- Step 2: Choose Type -->
           <div class="form-section">
-            <h3>2. Kies Type (optioneel)</h3>
-            <p class="help-text">Voeg eventueel extra inhoud toe aan de foto</p>
+            <h3>2. Kies Type <span v-if="!isPhotoValid" class="required">*</span><span v-else>(optioneel)</span></h3>
+            <p class="help-text">
+              <span v-if="!isPhotoValid">Selecteer "Citaat" of "Toespraak" om een herinnering zonder foto toe te voegen</span>
+              <span v-else>Voeg eventueel extra inhoud toe aan de foto</span>
+            </p>
             <div class="type-selector">
               <label class="type-option">
                 <input type="radio" value="quote" v-model="memoryType" />
                 <span class="type-label">
                   <span class="type-icon">💬</span>
                   <span>Citaat</span>
+                </span>
+              </label>
+              <label class="type-option">
+                <input type="radio" value="speech" v-model="memoryType" />
+                <span class="type-label">
+                  <span class="type-icon">📜</span>
+                  <span>Toespraak</span>
                 </span>
               </label>
               <label class="type-option">
@@ -482,9 +540,20 @@ const submitForm = async () => {
             <div v-if="memoryType === 'quote'">
               <textarea
                 v-model="typeInputText"
-                placeholder="Typ hier een citaat of herinnering van Opa Harry..."
+                placeholder="Typ hier een citaat of herinnering van Opa Harrie..."
                 rows="5"
                 class="text-input"
+              ></textarea>
+              <small class="char-count">{{ typeInputText.length }} karakters (minimaal 5)</small>
+            </div>
+            
+            <!-- Speech input -->
+            <div v-else-if="memoryType === 'speech'">
+              <textarea
+                v-model="typeInputText"
+                placeholder="Typ hier de volledige toespraak...&#10;&#10;Je kunt meerdere alinea's toevoegen door Enter te gebruiken."
+                rows="15"
+                class="text-input speech-textarea"
               ></textarea>
               <small class="char-count">{{ typeInputText.length }} karakters (minimaal 5)</small>
             </div>
@@ -750,9 +819,15 @@ const submitForm = async () => {
 /* Type selector */
 .type-selector {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
   margin-top: 1rem;
+}
+
+@media (min-width: 769px) {
+  .type-selector {
+    grid-template-columns: repeat(4, 1fr);
+  }
 }
 
 .type-option input[type="radio"] {

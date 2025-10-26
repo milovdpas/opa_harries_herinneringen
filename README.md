@@ -1,13 +1,13 @@
-# Opa Harry's Herinneringen
+# Opa Harrie's Herinneringen
 
-> *Een liefdevolle digitale herinnering aan Opa Harry*
+> *Een liefdevolle digitale herinnering aan Opa Harrie*
 
-A heartfelt, interactive web application to celebrate the life and memories of Opa Harry. Family members can explore a beautiful mosaic of his face made from countless family photos, zoom in to see individual memories, and discover personal quotes, audio clips, or videos shared by loved ones.
+A heartfelt, interactive web application to celebrate the life and memories of Opa Harrie. Family members can explore a beautiful mosaic of his face made from countless family photos, zoom in to see individual memories, and discover personal quotes, audio clips, or videos shared by loved ones.
 
 ## 🎯 Project Overview
 
 This memorial application features:
-- **Interactive Photo Mosaic**: Opa Harry's portrait composed of family memories
+- **Interactive Photo Mosaic**: Opa Harrie's portrait composed of family memories
 - **Zoomable Interface**: Explore individual photos up close
 - **Multimedia Memories**: Photos, quotes, audio recordings, and videos
 - **Family Contributions**: Upload and share new memories
@@ -131,7 +131,7 @@ See [LICENSE](./LICENSE) file for details.
 
 ## 💝 About
 
-This project is a labor of love, created to honor and remember Opa Harry. Every photo, quote, and memory shared here helps keep his spirit alive in the hearts of those who loved him.
+This project is a labor of love, created to honor and remember Opa Harrie. Every photo, quote, and memory shared here helps keep his spirit alive in the hearts of those who loved him.
 
 ---
 

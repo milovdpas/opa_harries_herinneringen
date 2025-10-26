@@ -1,13 +1,13 @@
-# Opa Harry’s Herinneringen
+# Opa Harrie’s Herinneringen
 
-A heartfelt, interactive web application to celebrate the life and memories of Opa Harry. This project lets family members explore a mosaic of his face made from countless family photos, zoom in to see individual memories, and discover personal quotes, audio clips, or videos shared by loved ones. The app grows over time as more memories are contributed.
+A heartfelt, interactive web application to celebrate the life and memories of Opa Harrie. This project lets family members explore a mosaic of his face made from countless family photos, zoom in to see individual memories, and discover personal quotes, audio clips, or videos shared by loved ones. The app grows over time as more memories are contributed.
 
 ## 🎯 Project Overview
 
 **Purpose:**  
 To create a digital memory archive for family members that is visually beautiful, interactive, and emotionally meaningful. The application allows users to:
 
-- See a large mosaic portrait of Opa Harry composed of family photos.  
+- See a large mosaic portrait of Opa Harrie composed of family photos.  
 - Zoom in on the mosaic to discover individual photos.  
 - Click on photos to reveal personal quotes, audio files, or videos.  
 - Contribute additional memories via a submissions form, gradually filling the mosaic.  
@@ -29,7 +29,7 @@ To create a digital memory archive for family members that is visually beautiful
 
 **Phase 1: Minimum Viable Product (MVP)**
 
-- Display Opa Harry’s face as a mosaic of cards.  
+- Display Opa Harrie’s face as a mosaic of cards.  
 - Zoom functionality to reveal individual photos.  
 - Empty cards for future memories, visually showing that the mosaic can grow.  
 - Mobile-friendly design implemented from the start.  
@@ -54,12 +54,12 @@ To create a digital memory archive for family members that is visually beautiful
 
 *Technical Notes:* Animations will be implemented with GSAP Business license (premium features available). CSS3 for basic transitions. Audio integration via HTML5 `<audio>` element with controls. Black matte or gradient background creates theatrical, memorial atmosphere with mosaic layered on top.
 
-*Emotional Touch:* Engaging animation and music evoke nostalgia and warmth, giving family members a more immersive experience of Opa Harry's memories.  
+*Emotional Touch:* Engaging animation and music evoke nostalgia and warmth, giving family members a more immersive experience of Opa Harrie's memories.  
 
 ## 🎨 Visual Mockup / Layout Description
 
 - **Background:** Deep black matte base (or subtle radial gradient) creates a theatrical, memorial atmosphere - like a gallery or exhibition space.
-- **Mosaic View:** Large central image of Opa Harry's face composed of small square cards, layered on top of the dark background. The mosaic appears to float, creating depth and drawing focus to the memories.
+- **Mosaic View:** Large central image of Opa Harrie's face composed of small square cards, layered on top of the dark background. The mosaic appears to float, creating depth and drawing focus to the memories.
 - **Empty Cards:** Initially appear as subtle gray or faded placeholders against the dark background, gradually filled as memories are added.  
 - **Zoom Interaction:** Scroll or pinch to zoom in, revealing individual photos clearly. Mobile pinch-to-zoom supported. Dark background remains stable while mosaic zooms.
 - **Card Flip:** Clicking a card rotates it, revealing a quote, audio file, or video on the reverse side.
@@ -69,7 +69,7 @@ To create a digital memory archive for family members that is visually beautiful
 
 ## 📁 Features (Final Vision)
 
-- Interactive, zoomable mosaic of Opa Harry’s face.  
+- Interactive, zoomable mosaic of Opa Harrie’s face.  
 - Clickable cards with multimedia memories: photos, quotes, audio, videos.  
 - Real-time photo and memory submissions.  
 - Mobile-first design.  

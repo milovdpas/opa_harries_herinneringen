@@ -93,7 +93,7 @@ The algorithm extracts the **average color** from each section of the reference 
 ## ✅ Next Steps
 
 Once you verify the algorithm works:
-1. Replace test photo with actual reference photo of Opa Harry
+1. Replace test photo with actual reference photo of Opa Harrie
 2. Build the actual mosaic components to display the colored cards
 3. Add zoom and interaction features
 

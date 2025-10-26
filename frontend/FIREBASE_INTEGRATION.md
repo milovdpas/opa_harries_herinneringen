@@ -131,7 +131,7 @@ const loadMemories = async () => {
   "id": "mem_1234567890_abc123",
   "type": "quote",
   "photoUrl": "https://firebasestorage.googleapis.com/.../photo.jpg",
-  "typeInput": "Opa Harry was de liefste man die ik kende",
+  "typeInput": "Opa Harrie was de liefste man die ik kende",
   "submitterName": "Jan",
   "gridPosition": { "row": 5, "col": 12 },
   "timestamp": Timestamp(...)

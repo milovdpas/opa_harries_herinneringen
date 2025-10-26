@@ -9,7 +9,7 @@
  */
 export function shareViaWhatsApp(): void {
     const url = window.location.href
-    const message = `Bekijk de herinneringen aan Opa Harry 💙\n\n${url}`
+    const message = `Bekijk de herinneringen aan Opa Harrie 💙\n\n${url}`
     const encodedMessage = encodeURIComponent(message)
     const whatsappUrl = `https://wa.me/?text=${encodedMessage}`
 
@@ -34,8 +34,8 @@ export async function shareNative(): Promise<void> {
 
     try {
         await navigator.share({
-            title: "Opa Harry's Herinneringen",
-            text: 'Bekijk de herinneringen aan Opa Harry 💙',
+            title: "Opa Harrie's Herinneringen",
+            text: 'Bekijk de herinneringen aan Opa Harrie 💙',
             url: window.location.href,
         })
     } catch (error) {

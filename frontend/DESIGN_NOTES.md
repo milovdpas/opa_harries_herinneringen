@@ -1,4 +1,4 @@
-# Design Notes - Opa Harry's Herinneringen
+# Design Notes - Opa Harrie's Herinneringen
 
 ## Visual Concept
 
@@ -10,7 +10,7 @@
 
 ### Layering & Depth
 1. **Base Layer**: Black gradient background (always visible)
-2. **Mosaic Layer**: Portrait of Opa Harry composed of memory cards (floats on top)
+2. **Mosaic Layer**: Portrait of Opa Harrie composed of memory cards (floats on top)
 3. **Interactive Layer**: Individual cards that can flip/zoom
 4. **UI Layer**: Buttons, controls overlay
 

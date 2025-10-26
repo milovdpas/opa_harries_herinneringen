@@ -102,7 +102,7 @@ To start development:
 │                                               │
 │         ┌─────────────────────┐              │
 │         │                     │              │
-│         │   Opa Harry's      │  ← Mosaic     │
+│         │   Opa Harrie's      │  ← Mosaic     │
 │         │   Photo Mosaic     │    floats     │
 │         │   (Memory Cards)   │    on top     │
 │         │                     │              │
